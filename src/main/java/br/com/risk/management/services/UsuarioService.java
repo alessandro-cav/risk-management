@@ -1,7 +1,5 @@
 package br.com.risk.management.services;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -13,6 +11,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,8 +22,11 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 
+import br.com.risk.management.config.email.EnviaEmail;
+import br.com.risk.management.config.jwt.JWTConstants;
 import br.com.risk.management.entities.Perfil;
 import br.com.risk.management.entities.Usuario;
+import br.com.risk.management.enuns.Status;
 import br.com.risk.management.handlers.BadRequestException;
 import br.com.risk.management.handlers.ObjetoNotFoundException;
 import br.com.risk.management.repositories.UsuarioRepository;
@@ -34,8 +36,6 @@ import br.com.risk.management.requests.SenhasRequestDTO;
 import br.com.risk.management.requests.UsuarioRequestDTO;
 import br.com.risk.management.responses.MensagemResponseDTO;
 import br.com.risk.management.responses.UsuarioResponseDTO;
-
-
 
 @Service
 public class UsuarioService implements UserDetailsService {
