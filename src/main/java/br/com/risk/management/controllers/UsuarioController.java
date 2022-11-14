@@ -18,14 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.risk.management.requests.FiltroUsuarioRequestDTO;
 import br.com.risk.management.requests.LoginRequestDTO;
 import br.com.risk.management.requests.SenhasRequestDTO;
+import br.com.risk.management.requests.UsuarioPasswordRequestDTO;
 import br.com.risk.management.requests.UsuarioRequestDTO;
 import br.com.risk.management.responses.MensagemResponseDTO;
 import br.com.risk.management.responses.UsuarioResponseDTO;
+import br.com.risk.management.responses.UsuarioTokenResponseDTO;
 import br.com.risk.management.services.UsuarioService;
-
-
 
 @RestController
 @RequestMapping("/usuarios")
@@ -76,19 +77,19 @@ public class UsuarioController {
 	public ResponseEntity<MensagemResponseDTO> ativarEInativar(@PathVariable(name = "id") Long id) {
 		return ResponseEntity.ok(this.service.ativarEInativar(id));
 	}
-	
-	/*
-	 * @PostMapping("/filtro") public ResponseEntity<List<UsuarioResponseDTO>>
-	 * filtroUsuario(
-	 * 
-	 * @RequestBody FiltroRequestDTO filtroPerfilRequestDTO, @RequestParam Integer
-	 * pagina,
-	 * 
-	 * @RequestParam Integer quantidade, @RequestParam String ordem, @RequestParam
-	 * String ordenarPor) { return
-	 * ResponseEntity.ok(this.service.filtroUsuario(filtroPerfilRequestDTO,
-	 * PageRequest.of(pagina, quantidade, Sort.by(Direction.valueOf(ordem),
-	 * ordenarPor)))); }
-	 */
+
+	@PostMapping("/filtro")
+	public ResponseEntity<List<UsuarioResponseDTO>> filtroUsuario(
+			@RequestBody FiltroUsuarioRequestDTO filtroUsuarioRequestDTO, @RequestParam Integer pagina,
+			@RequestParam Integer quantidade, @RequestParam String ordem, @RequestParam String ordenarPor) {
+		return ResponseEntity.ok(this.service.filtroUsuario(filtroUsuarioRequestDTO,
+				PageRequest.of(pagina, quantidade, Sort.by(Direction.valueOf(ordem), ordenarPor))));
+	}
+
+	@PostMapping("/login")
+	public ResponseEntity<UsuarioTokenResponseDTO> gerarTokenPeloUsuarioESenha(
+			@RequestBody @Valid UsuarioPasswordRequestDTO usuarioPasswordRequestDTO) {
+		return ResponseEntity.ok(this.service.gerarTokenPeloUsuarioESenha(usuarioPasswordRequestDTO));
+	}
 
 }

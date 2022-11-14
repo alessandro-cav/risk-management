@@ -30,12 +30,15 @@ import br.com.risk.management.enuns.Status;
 import br.com.risk.management.handlers.BadRequestException;
 import br.com.risk.management.handlers.ObjetoNotFoundException;
 import br.com.risk.management.repositories.UsuarioRepository;
-import br.com.risk.management.requests.FiltroPerfilRequestDTO;
+import br.com.risk.management.requests.FiltroUsuarioRequestDTO;
 import br.com.risk.management.requests.LoginRequestDTO;
 import br.com.risk.management.requests.SenhasRequestDTO;
+import br.com.risk.management.requests.UsuarioPasswordRequestDTO;
 import br.com.risk.management.requests.UsuarioRequestDTO;
 import br.com.risk.management.responses.MensagemResponseDTO;
+import br.com.risk.management.responses.PerfilResponseDTO;
 import br.com.risk.management.responses.UsuarioResponseDTO;
+import br.com.risk.management.responses.UsuarioTokenResponseDTO;
 
 @Service
 public class UsuarioService implements UserDetailsService {
@@ -181,11 +184,10 @@ public class UsuarioService implements UserDetailsService {
 				.orElseThrow(() -> new ObjetoNotFoundException("Usuário não encontrado."));
 	}
 
-	public List<UsuarioResponseDTO> filtroUsuario(FiltroPerfilRequestDTO filtroPerfilRequestDTO,
+	public List<UsuarioResponseDTO> filtroUsuario(FiltroUsuarioRequestDTO filtroUsuarioRequestDTO,
 			PageRequest pageRequest) {
 
-		Usuario usuario = this.modelMapper.map(filtroPerfilRequestDTO, Usuario.class);
-
+		Usuario usuario = this.modelMapper.map(filtroUsuarioRequestDTO, Usuario.class);
 		ExampleMatcher exampleMatcher = ExampleMatcher.matching().withIgnoreCase()
 				.withStringMatcher(StringMatcher.CONTAINING);
 		Example<Usuario> example = Example.of(usuario, exampleMatcher);
@@ -194,6 +196,41 @@ public class UsuarioService implements UserDetailsService {
 		return usuarios.stream().map(user -> {
 			return this.modelMapper.map(user, UsuarioResponseDTO.class);
 		}).collect(Collectors.toList());
+	}
+
+	public UsuarioTokenResponseDTO gerarTokenPeloUsuarioESenha(UsuarioPasswordRequestDTO usuarioPasswordRequestDTO) {
+
+		return this.repository.findByLogin(usuarioPasswordRequestDTO.getLogin()).map(usuario -> {
+
+			boolean validarSenha = passwordEncod.matches(usuarioPasswordRequestDTO.getPassword(),
+					usuario.getPassword());
+
+			if (!validarSenha) {
+				throw new BadRequestException("Senha invalida");
+			}
+
+			String token = JWT.create().withSubject(usuario.getLogin())
+					.withExpiresAt(new Date(System.currentTimeMillis() + JWTConstants.TOKEN_EXPIRADO))
+					.sign(Algorithm.HMAC512(JWTConstants.CHAVE_ASSINATURA));
+
+			UsuarioResponseDTO usuarioResposta = new UsuarioResponseDTO();
+			usuarioResposta.setId(usuario.getId());
+			usuarioResposta.setLogin(usuario.getLogin());
+			usuarioResposta.setStatus(usuario.getStatus());
+
+			PerfilResponseDTO perfilResponseDTO = new PerfilResponseDTO();
+			perfilResponseDTO.setId(usuario.getPerfil().getId());
+			perfilResponseDTO.setNome(usuario.getPerfil().getNome());
+			usuarioResposta.setPerfil(perfilResponseDTO);
+
+			UsuarioTokenResponseDTO tokenResponseDTO = new UsuarioTokenResponseDTO();
+			tokenResponseDTO.setUsuario(usuarioResposta);
+			tokenResponseDTO.setToken(token);
+
+			return tokenResponseDTO;
+
+		}).orElseThrow(() -> new ObjetoNotFoundException("Usuário não encontrado."));
+
 	}
 
 }
